@@ -1,0 +1,4 @@
+LOGLEVEL=debug
+HOST=0.0.0.0
+PORT=9100
+BIN=.venv/bin/uvicorn

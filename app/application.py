@@ -65,7 +65,7 @@ class TestParams(BaseModel):
 # Optional的是param参数
 # 测试: curl -XPOST -H "content-type:application/json" --data '{"v1": "ok"}' 'http://127.0.0.1:9100/items/120?q1=1&q2=2&q=99'
 @app.post("/items/{item_id}")
-def read_item(request:Request, 
+async def read_item(request:Request, 
               body1:TestParams,  # post put body
               item_id: int,  # path
               q1: str,  # query
@@ -78,3 +78,9 @@ def read_item(request:Request,
     print("authorization: %s", authorization)
 
     return {"item_id": item_id, "q": q, "q1":q1, "q2": q2, "data": body1, "ctx": ctx}
+
+
+
+@app.post("/api/ml/lemma")
+async def GetLemma():
+    return {"error_no": 10000, "msg": "ok", "data": ""}
