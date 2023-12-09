@@ -1,17 +1,20 @@
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import Depends, FastAPI, Header, Body, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+import logging
 
 from .config import Config, config
 
+from .lemma import getLemma
 
 class Context:
 
     def __init__(self,cfg:Config):
         self.cfg = cfg
+        self.lemma = getLemma
 
 ctx = Context(
     cfg=config,
@@ -33,6 +36,8 @@ async def lifespan(app: FastAPI):
         await Close(app)  # 结束时执行
 
 app = FastAPI(lifespan=lifespan)
+
+logger = logging.getLogger("uvicorn.access")
 
 app.add_middleware(
     CORSMiddleware,
@@ -80,7 +85,17 @@ async def read_item(request:Request,
     return {"item_id": item_id, "q": q, "q1":q1, "q2": q2, "data": body1, "ctx": ctx}
 
 
+class LemmaRequest(BaseModel):
+    content:List[str]
 
 @app.post("/api/ml/lemma")
-async def GetLemma():
-    return {"error_no": 10000, "msg": "ok", "data": ""}
+async def GetLemma(
+    opinions:LemmaRequest,
+    ctx:Context = Depends(lambda: ctx)
+    ):
+    try:
+        result = ctx.lemma(opinions.content)
+        return {"error_no": 10000, "msg": "ok", "data": result}
+    except Exception as err:
+        logger.error(err)
+        return {"error_no": 20000, "msg": f"lemma异常: {err}"}
